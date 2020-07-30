@@ -2,6 +2,7 @@ import pandas as pd
 from datetime import datetime
 import datetime as dt
 import math
+from stoppage import StoppageAdder
 import numpy as np
 from scipy import stats
 from config import Config
@@ -21,6 +22,8 @@ class DSGenerator(object):
         self.ta_connection = Config(flag='TA').gts_pg_connection
         self.route = route
         self.toll_data = self.process_routes_get_toll_booths()
+        self.route_df = self.toll_data[['vehicle_no', 'route', 'trip_id', 'loading_out_time', 'unloading_in_time']].drop_duplicates()
+        self.stoppage_adder_obj = StoppageAdder(self.route, self.route_df)
         self.vars_data = self._generate_vars(toll_data=self.toll_data)
 
     @staticmethod
@@ -82,6 +85,11 @@ class DSGenerator(object):
         return toll_data
 
     def _generate_vars(self, toll_data):
+        # Adding Stoppage Data
+        stoppage_df = self.stoppage_adder_obj.generate_stoppage_poi()
+        filtered_stoppage_df = stoppage_df[stoppage_df.time_taken > 0]
+        filtered_stoppage_df.reset_index(inplace=True, drop=True)
+        toll_data = toll_data.append(filtered_stoppage_df, ignore_index=True)
         # Get loading Out Time of Day ( Night->0, Morning->1, Afternoon->2, Evening->3)
         toll_data = toll_data.assign(loading_out_time_of_day=pd.cut(toll_data.loading_out_time.dt.hour,
                                                                     [0, 6, 12, 18, 23],

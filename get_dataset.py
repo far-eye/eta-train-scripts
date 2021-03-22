@@ -14,9 +14,8 @@ class DSGenerator(object):
     run and train model.
     """
 
-    POI_CUTOFF_PERCENTAGE = 0.70
+    POI_CUTOFF_PERCENTAGE = 0.80
     Z_SCORE_THRESHOLD = 3
-    ONE_HOT_ENCODED_POI_COLS = None
 
     def __init__(self, route):
         self.ta_connection = Config(flag='TA').gts_pg_connection
@@ -24,7 +23,8 @@ class DSGenerator(object):
         self.toll_data = self.process_routes_get_toll_booths()
         self.route_df = self.toll_data[['vehicle_no', 'route', 'trip_id', 'loading_out_time', 'unloading_in_time']].drop_duplicates()
         self.stoppage_adder_obj = StoppageAdder(self.route, self.route_df)
-        self.vars_data = self._generate_vars(toll_data=self.toll_data)
+        self.vars_data = self._generate_vars(toll_data=self.toll_data)[0]
+        self.ONE_HOT_ENCODED_POI_COLS = self._generate_vars(toll_data=self.toll_data)[1]
 
     @staticmethod
     def drop_features_na(dataframe, drop_cols=None):
@@ -137,7 +137,11 @@ class DSGenerator(object):
         one_hot_encoded_poi_id = pd.get_dummies(toll_data['poi_id'], prefix='poi')
         for item in one_hot_encoded_poi_id.columns:
             toll_data[item] = one_hot_encoded_poi_id[item]
+        
 
-        DSGenerator.ONE_HOT_ENCODED_POI_COLS = list(one_hot_encoded_poi_id.columns)
+        ONE_HOT_ENCODED_POI_COLS = [] 
+        for poi_label in list(one_hot_encoded_poi_id.columns):
+            ONE_HOT_ENCODED_POI_COLS.append(poi_label)
+        #self.ONE_HOT_ENCODED_POI_COLS = list(one_hot_encoded_poi_id.columns)
 
-        return toll_data
+        return toll_data, ONE_HOT_ENCODED_POI_COLS

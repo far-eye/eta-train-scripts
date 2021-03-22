@@ -1,0 +1,2 @@
+route,trip_id,vehicle_no,loading_out_time,unloading_in_time,poi_id,ist_timestamp,distance_travelled,time_taken,time_taken_actual,time_taken_predicted
+sahibabad#saharanpur#bhushan,CTDP5U00,HR55S5267,2020-07-10 04:09:18,2020-07-10 12:57:35,285254,2020-07-10 04:11:18,0.92,0.0,8.77138888888889,19.63986558407259

@@ -1,0 +1,2 @@
+route,trip_id,vehicle_no,loading_out_time,unloading_in_time,poi_id,ist_timestamp,distance_travelled,time_taken,time_taken_actual,time_taken_predicted
+sahibabad#rohtak#bhushan,CTPSDU00,HR55Q9481,2020-06-08 23:51:33,2020-06-09 04:58:08,285254,2020-06-08 23:54:03,1.1,0.0,5.0680555555555555,10.96083333333333

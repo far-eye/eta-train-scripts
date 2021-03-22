@@ -1,0 +1,2 @@
+route,trip_id,vehicle_no,loading_out_time,unloading_in_time,poi_id,ist_timestamp,distance_travelled,time_taken,time_taken_actual,time_taken_predicted
+khapoli#nagpur#bhushan,CT3SWT00,MH40AK5369,2020-07-07 16:55:53,2020-07-09 13:45:56,285173,2020-07-08 12:31:53,291.37,19.68,25.234166666666667,28.939631428916627

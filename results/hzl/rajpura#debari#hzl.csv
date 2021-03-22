@@ -1,0 +1,3 @@
+route,trip_id,vehicle_no,loading_out_time,unloading_in_time,poi_id,ist_timestamp,distance_travelled,time_taken,time_taken_actual,time_taken_predicted
+rajpura#debari#hzl,CT56LV00,RJ14GL1694,2020-08-04 14:45:53,2020-08-04 17:14:16,813529,2020-08-04 14:52:04,1.98,0.0,2.37,2.3274237665233595
+rajpura#debari#hzl,CTVTJV00,RJ14GK9953,2020-08-03 13:04:53,2020-08-03 15:22:04,813529,2020-08-03 13:10:53,1.89,0.0,2.186388888888889,2.327503222419039

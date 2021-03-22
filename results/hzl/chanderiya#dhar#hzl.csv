@@ -1,0 +1,3 @@
+route,trip_id,vehicle_no,loading_out_time,unloading_in_time,poi_id,ist_timestamp,distance_travelled,time_taken,time_taken_actual,time_taken_predicted
+chanderiya#dhar#hzl,CT8HNW00,RJ09GD3129,2020-08-21 17:41:52,2020-08-23 06:36:36,106275,2020-08-22 14:47:56,25.98,21.12,15.811111111111112,14.451384290699481
+chanderiya#dhar#hzl,CT697W00,RJ09GC3085,2020-08-13 18:47:24,2020-08-14 09:00:47,106275,2020-08-13 20:48:06,15.57,1.92,12.211388888888889,13.633484286616865

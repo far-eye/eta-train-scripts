@@ -1,0 +1,3 @@
+route,trip_id,vehicle_no,loading_out_time,unloading_in_time,poi_id,ist_timestamp,distance_travelled,time_taken,time_taken_actual,time_taken_predicted
+meramandali#khurda#bhushan,CTUGUT00,OD14K8917,2020-07-05 20:49:43,2020-07-06 07:40:18,285183,2020-07-06 06:58:15,110.43,10.08,0.7008333333333333,0.6660995357807031
+meramandali#khurda#bhushan,CTUGUT00,OD14K8917,2020-07-05 20:49:43,2020-07-06 07:40:18,114189,2020-07-06 07:34:00,129.84,10.8,0.105,0.25595906769271504

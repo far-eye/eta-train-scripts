@@ -1,0 +1,2 @@
+route,trip_id,vehicle_no,loading_out_time,unloading_in_time,poi_id,ist_timestamp,distance_travelled,time_taken,time_taken_actual,time_taken_predicted
+sahibabad#sampla#bhushan,CT5EFU00,UP71AT0923,2020-07-15 03:54:37,2020-07-15 13:56:05,285254,2020-07-15 04:00:37,1.05,0.0,9.924444444444445,-0.28877529334767704

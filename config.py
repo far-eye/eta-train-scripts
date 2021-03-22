@@ -29,12 +29,12 @@ class Config(object):
     MSQL_PORT = get_var('MSQL_PORT', '3306')
     MSQL_DATABASE = get_var('MSQL_DATABASE', 'dipper_development')
     MSQL_USERNAME = get_var('MSQL_USERNAME', 'root')
-    MSQL_PASSWORD = get_var('MSQL_PASSWORD', 'DipperRead123')
+    MSQL_PASSWORD = get_var('MSQL_PASSWORD', 'E55B25')
     POI_CONS_FETCH_URL = get_var('POI_CONS_FETCH_URL',
                                  'http://35.154.229.215:2610/poi_histories/\
                                  nearest_by_trip_multiple_poi_show?poi_id={poi_id}&trip_id={trip_id}')
 
-    POI_CREATE_URL = get_var('POI_CREATE_URL', "https://transportation-test.fareye.co/api/v2/pois")
+    POI_CREATE_URL = get_var('POI_CREATE_URL', "https://transportation.fareye.co/api/v2/pois")
 
     def __init__(self, flag=None):
         self.gts_pg_connection = self._get_pg_connection(flag)

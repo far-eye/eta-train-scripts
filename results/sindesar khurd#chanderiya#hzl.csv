@@ -1,0 +1,4 @@
+route,trip_id,vehicle_no,loading_out_time,unloading_in_time,poi_id,ist_timestamp,distance_travelled,time_taken,time_taken_actual,time_taken_predicted
+sindesar khurd#chanderiya#hzl,CTZ29W00,RJ14GL1697,2020-08-14 16:15:54,2020-08-14 19:16:07,813529,2020-08-14 16:32:54,6.58,0.24,2.7202777777777776,2.4324627964072083
+sindesar khurd#chanderiya#hzl,CTJS1W00,RJ06GC0508,2020-08-11 15:01:15,2020-08-11 19:26:09,813529,2020-08-11 17:09:26,9.51,2.16,2.278611111111111,2.4326130086392785
+sindesar khurd#chanderiya#hzl,CTYFVV00,RJ14GL0492,2020-08-09 22:37:37,2020-08-10 01:04:48,813529,2020-08-09 22:52:37,6.67,0.24,2.2030555555555558,2.4326666285458383

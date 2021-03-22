@@ -7,49 +7,73 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import DBSCAN
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVR
+from sklearn.neighbors import NearestNeighbors
 from sklearn import metrics
 import numpy as np
 import pickle
 
 
-class ModelGen(object):
-    PCA_COMPONENTS = 3
-    TRAIN_COLUMNS = ['time_taken', 'distance_travelled', 'loading_out_time_of_day', 'is_time_day',
+TRAIN_COLUMNS = ['time_taken', 'distance_travelled', 'loading_out_time_of_day', 'is_time_day',
                      'entry_day_week', 'loading_out_day_week', 'ist_weekday', 'ist_week_of_year',
                      'ist_hour', 'ist_week_hour', 'loading_out_wek_of_year',
                      'loading_out_hour', 'loading_out_week_hour', 'avg_speed', 'time_from_loading_point'
                      ]
+
+class ModelGen(object):
+    PCA_COMPONENTS = 3
+   #TRAIN_COLUMNS = ['time_taken', 'distance_travelled', 'loading_out_time_of_day', 'is_time_day',
+    #                 'entry_day_week', 'loading_out_day_week', 'ist_weekday', 'ist_week_of_year',
+     #                'ist_hour', 'ist_week_hour', 'loading_out_wek_of_year',
+      #               'loading_out_hour', 'loading_out_week_hour', 'avg_speed', 'time_from_loading_point'
+       #              ]
     TEST_COLUMNS = 'time_taken_actual'
-    ONE_HOT_ENCODE_CLUSTER = None
 
     def __init__(self, route):
         self.ds_gen_obj = DSGenerator(route)
         self.model_data = self.ds_gen_obj.vars_data
         self.scaler = StandardScaler()
+        self.route = route
         self.one_hot_encoded_poi_cols = self.ds_gen_obj.ONE_HOT_ENCODED_POI_COLS
-        self.th_connection = Config(flag='TH').th_pg_connection
+        self.th_connection = Config(flag='TH').gts_pg_connection
         self.model_routes = route.replace('#', '')
+        self.ONE_HOT_ENCODE_CLUSTER = []
+        self.TRAIN_COLUMNS = []
+        for trn_cols in TRAIN_COLUMNS:
+            self.TRAIN_COLUMNS.append(trn_cols)
 
     def generate_train_columns(self):
-        for item in ModelGen.ONE_HOT_ENCODE_CLUSTER:
-            ModelGen.TRAIN_COLUMNS.append(item)
+        for item in self.ONE_HOT_ENCODE_CLUSTER:
+            self.TRAIN_COLUMNS.append(item)
 
         for item in self.one_hot_encoded_poi_cols:
-            ModelGen.TRAIN_COLUMNS.append(item)
+            self.TRAIN_COLUMNS.append(item)
+
+    def _get_eps_value(self, neigh, scaled_data):
+        nbrs = NearestNeighbors(n_neighbors=neigh, algorithm='ball_tree').fit(scaled_data)
+
+        distances, indices = nbrs.kneighbors(scaled_data)
+        distances = np.sort(distances, axis=0)
+        distances = distances[:, 1]
+        return np.mean(distances)
 
     def _generate_cluster_model(self):
         scaled_data = self.scaler.fit_transform(self.model_data[['time_taken',
                                                                  'distance_travelled', 'loading_out_time_of_day',
-                                                                 'is_time_day', 'entry_day_week', 'loading_out_day_week',
+                                                                 'is_time_day', 'entry_day_week',
+                                                                 'loading_out_day_week',
                                                                  'ist_weekday', 'ist_week_of_year', 'ist_hour',
                                                                  'ist_week_hour', 'loading_out_wek_of_year',
                                                                  'loading_out_hour', 'loading_out_week_hour',
                                                                  'avg_speed', 'time_from_loading_point']])
-        pca = PCA(n_components=3)
-        principalComponents = pca.fit_transform(scaled_data)
-        diff = (self.model_data.distance_travelled.max() - self.model_data.distance_travelled.min()) / \
-               self.model_data.distance_travelled.median()
-        db_scan = DBSCAN(eps=diff).fit(principalComponents)
+        if len(scaled_data) > 3:
+            pca = PCA(n_components=3)
+            principalComponents = pca.fit_transform(scaled_data)
+        else:
+            principalComponents = scaled_data[:, :3]
+        diff = (self.model_data.distance_travelled.max() - self.model_data.distance_travelled.min()) / self.model_data.poi_id.nunique()
+        diff = int(diff)
+        eps = self._get_eps_value(2, scaled_data)
+        db_scan = DBSCAN(eps=eps).fit(principalComponents)
         cluster_model = 'models/cluster_model_{route}.sav'.format(route=self.model_routes)
         pickle.dump(db_scan, open(cluster_model, 'wb'))
         self.model_data['cluster'] = db_scan.labels_
@@ -63,13 +87,14 @@ class ModelGen(object):
         one_hot_encoded_cluster = pd.get_dummies(self.model_data['cluster'], prefix='cluster')
         for item in one_hot_encoded_cluster.columns:
             self.model_data[item] = one_hot_encoded_cluster[item]
-
-        ModelGen.ONE_HOT_ENCODE_CLUSTER = list(one_hot_encoded_cluster.columns)
+        for cluster_label in list(one_hot_encoded_cluster.columns):
+            self.ONE_HOT_ENCODE_CLUSTER.append(cluster_label)
+        #self.ONE_HOT_ENCODE_CLUSTER = list(one_hot_encoded_cluster.columns)
         return self.model_data
 
     def vehicle_based_train_test_split(self, test_data_perc):
-        X = self.model_data[ModelGen.TRAIN_COLUMNS]
-        Y = self.model_data[ModelGen.TEST_COLUMNS]
+        X = self.model_data[self.TRAIN_COLUMNS]
+        Y = self.model_data[self.TEST_COLUMNS]
 
         if not test_data_perc:
             test_data_perc = 0.3
@@ -169,3 +194,7 @@ class ModelGen(object):
         print('MAE is:', metrics['mae'])
         predicted_data = self.model_data[self.model_data.index.isin(df.index)]
         predicted_data['time_taken_predicted'] = df['Predicted']
+        data_to_dump = predicted_data[
+            ['route', 'trip_id', 'vehicle_no', 'loading_out_time', 'unloading_in_time', 'poi_id', 'ist_timestamp',
+             'distance_travelled', 'time_taken', 'time_taken_actual', 'time_taken_predicted']]
+        data_to_dump.to_csv('results/' + self.route + '.csv', index=False)

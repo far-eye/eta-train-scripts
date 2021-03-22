@@ -1,0 +1,2 @@
+route,trip_id,vehicle_no,loading_out_time,unloading_in_time,poi_id,ist_timestamp,distance_travelled,time_taken,time_taken_actual,time_taken_predicted
+dariba#chanderiya#hzl,CT7ZOV00,RJ09GB1000,2020-08-06 18:14:04,2020-08-07 11:58:16,813529,2020-08-06 18:19:04,1.22,0.0,17.653333333333336,2.9087079720603066

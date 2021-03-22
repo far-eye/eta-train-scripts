@@ -40,12 +40,12 @@ class StoppageAdder(object):
                          'consigner_lat': interm_df.consigner_lat.values[0],
                          'consigner_long': interm_df.consigner_long.values[0], }
             self.lat_lng_df.append(temp_dict)
-        lat_lng_df = pd.DataFrame(self.lat_lng_df)
-        return lat_lng_df
+        self.lat_lng_df = pd.DataFrame(self.lat_lng_df)
+        return self.lat_lng_df
 
     # Add to toll_booth_data
-    def add_lat_lng_toll_data(self, lat_lng_df, row, label, consign):
-        consignee_dat = lat_lng_df[lat_lng_df.slug == row['trip_id']]
+    def add_lat_lng_toll_data(self, row, label, consign):
+        consignee_dat = self.lat_lng_df[ self.lat_lng_df.slug == row['trip_id']]
         if label == 'lat' and consign == 'consignee':
             return consignee_dat['consignee_lat'].values[0]
         elif label == 'lng' and consign == 'consignee':
@@ -56,17 +56,14 @@ class StoppageAdder(object):
             return consignee_dat['consigner_long'].values[0]
 
     def _create_stoppage_pois(self, lat, lng):
-        payload = dict(radius=1.0, lat=lat, lng=lng, poiType='hub', poiNickName='stopagge_poi')
+        payload = dict(radius=1.0, lat=lat, lng=lng, poi_type='hub', poi_nick_name='stopagge_poi')
         headers = {
-            'authority': 'transportation-test.fareye.co',
             'accept': 'application/json',
-            'x-change-case': 'true',
             'authorization': 'Bearer eyJhbGciOiJub25lIn0.eyJ1c2VyX2lkIjoxOTU0LCJuYW1lIjoiQWppdCBrdW1hciIsImVtYWlsIjoiYWppdGtyQHRhdGFzdGVlbGJzbC5jby5pbiIsInBob25lX251bWJlciI6Ijc3NjM4MDc0NDMiLCJyb2xlIjoiQ29uc2lnbmVyIiwiZXhwIjoxNjI1MDUwMjQ5fQ.',
-            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
             'content-type': 'application/json',
         }
 
-        response = requests.request("POST", Config().POI_CREATE_URL, headers=headers, data=payload)
+        response = requests.post(url=Config().POI_CREATE_URL, headers=headers, data=payload)
 
         if response.status_code == 200:
             return response.json()['id']
@@ -116,11 +113,11 @@ class StoppageAdder(object):
         stoppage_analysis_route_df = self.stoppage_seed_route
         query = "SELECT id, stoppage_identifier, latitude, longitude, no_of_vehicles,  SQRT(" + \
                 "POW(69.1 * (latitude - (select consigner_lat from consigner_trips WHERE  origin='{origin}' AND " \
-                "destination='{destniation}' AND consigner_code='{consigner_code}' AND loading_out_time is not null limit 1)), " \
+                "destination='{destination}' AND consigner_code='{consigner_code}' AND loading_out_time is not null limit 1)), " \
                 "2) +" + \
                 "POW(69.1 * ((select consigner_long from consigner_trips WHERE  origin='{origin}' AND destination='{" \
-                "destniation}' AND consigner_code='{consigner_code}' AND loading_out_time is not null limit 1) - longitude) * " \
-                "COS(latitude / 57.3), 2)) AS distance" + \
+                "destination}' AND consigner_code='{consigner_code}' AND loading_out_time is not null limit 1) - longitude) * " \
+                "COS(latitude / 57.3), 2)) AS distance " + \
                 "FROM stoppage_points  where stoppage_identifier='{stoppage_route}' and no_of_vehicles > 10  order by " \
                 "no_of_vehicles desc limit {limit}; "
 
@@ -130,6 +127,7 @@ class StoppageAdder(object):
             limit_vehicle = math.ceil(total_count / 3)
 
         route_split = self.route.split('#')
+        import pdb;pdb.set_trace()
         # Origin, Destination, Consigner Code
         origin = route_split[0]
         destination = route_split[1]
@@ -141,7 +139,7 @@ class StoppageAdder(object):
         query = query.format(origin=origin, destination=destination,
                              consigner_code=consigner_code, stoppage_route=stoppage_route, limit=limit_vehicle)
 
-        stoppage_df = pd.read_csv(query, self.mysql_connection)
+        stoppage_df = pd.read_sql_query(query, self.mysql_connection)
         stoppage_pois = list()
         for index, row in stoppage_df.iterrows():
             lat = row['latitude']
@@ -151,30 +149,29 @@ class StoppageAdder(object):
 
             if id:
                 stoppage_pois.append(id)
-
-        with open('stoppage_poi/' + stoppage_route + '.json', 'wb') as write:
+        
+        with open('stoppage_poi/' + stoppage_route + '.json', 'w') as write:
             json.dump(stoppage_pois, write)
 
         stoppage_analysis_route_df['odometer_km'] = stoppage_analysis_route_df.apply(self.get_first_odometer_histories,
                                                                                      axis=1)
         trip_id_vals = set(stoppage_analysis_route_df['trip_id'].values)
 
-        lat_lng_df = self.get_consignee_lat_lng(trip_val=trip_id_vals)
+        self.get_consignee_lat_lng(trip_val=trip_id_vals)
 
         stoppage_analysis_route_df['consignee_lat'] = stoppage_analysis_route_df.apply(self.add_lat_lng_toll_data,
                                                                                        args=(
-                                                                                       lat_lng_df, 'lat', 'consignee',),
+                                                                                        'lat', 'consignee',),
                                                                                        axis=1)
         stoppage_analysis_route_df['consignee_long'] = stoppage_analysis_route_df.apply(self.add_lat_lng_toll_data,
-                                                                                        args=(lat_lng_df, 'lng',
+                                                                                        args=('lng',
                                                                                               'consignee',),
                                                                                         axis=1)
         stoppage_analysis_route_df['consigner_lat'] = stoppage_analysis_route_df.apply(self.add_lat_lng_toll_data,
-                                                                                       args=(
-                                                                                       lat_lng_df, 'lat', 'consigner',),
+                                                                                       args=('lat', 'consigner',),
                                                                                        axis=1)
         stoppage_analysis_route_df['consigner_long'] = stoppage_analysis_route_df.apply(self.add_lat_lng_toll_data,
-                                                                                        args=(lat_lng_df, 'lng',
+                                                                                        args=('lng',
                                                                                               'consigner',),
                                                                                         axis=1)
         stoppage_df = self.get_stoppage_cons(stoppage_analysis_route_df, stoppage_pois)

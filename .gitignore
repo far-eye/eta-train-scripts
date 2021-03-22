@@ -179,6 +179,8 @@ cython_debug/
 # JIRA plugin
 atlassian-ide-plugin.xml
 
+eta_venv/*
+
 # Crashlytics plugin (for Android Studio and IntelliJ)
 com_crashlytics_export_strings.xml
 crashlytics.properties
